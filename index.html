@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroTalk — Understanding AI Chatbots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0D1117;
+    --surface: #151B24;
+    --surface-2: #1C2430;
+    --line: #29323F;
+    --text: #E9EEF4;
+    --muted: #8B96A5;
+    --blue: #7C9EFF;
+    --amber: #FFB86B;
+    --mono: 'IBM Plex Mono', monospace;
+    --disp: 'Space Grotesk', sans-serif;
+    --body: 'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--blue); color:#0D1117;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+
+  /* ---------- Layout helpers ---------- */
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+  section{padding:110px 0;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--blue);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:8px; height:8px;
+    background:var(--blue);
+    border-radius:50%;
+    display:inline-block;
+    box-shadow:0 0 0 4px rgba(124,158,255,0.15);
+  }
+  h1,h2,h3{font-family:var(--disp); font-weight:600; letter-spacing:-0.01em;}
+  h2{font-size:clamp(28px,4vw,42px); margin-bottom:16px;}
+  .lead{color:var(--muted); font-size:18px; max-width:640px; margin-bottom:56px;}
+
+  /* ---------- Nav ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    background:rgba(13,17,23,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{
+    max-width:1080px; margin:0 auto; padding:18px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo{
+    font-family:var(--disp); font-weight:700; font-size:20px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .logo-dot{
+    width:10px; height:10px; border-radius:3px;
+    background:linear-gradient(135deg,var(--blue),var(--amber));
+  }
+  .navlinks{display:flex; gap:32px; font-size:14px; color:var(--muted);}
+  .navlinks a{text-decoration:none; transition:color 0.2s;}
+  .navlinks a:hover{color:var(--text);}
+  @media (max-width:700px){ .navlinks{display:none;} }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:170px 0 100px;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:50px;
+    align-items:center;
+  }
+  @media (max-width:860px){ .hero{grid-template-columns:1fr; padding-top:150px;} }
+
+  .hero h1{
+    font-size:clamp(38px,5.5vw,62px);
+    line-height:1.05;
+    margin-bottom:22px;
+  }
+  .hero h1 .accent{color:var(--blue);}
+  .hero p{color:var(--muted); font-size:18px; max-width:480px; margin-bottom:32px;}
+  .btnrow{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:15px;
+    padding:13px 24px; border-radius:8px;
+    text-decoration:none; display:inline-block;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    border:1px solid transparent;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--blue); color:#0B0F17;}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 8px 24px rgba(124,158,255,0.25);}
+  .btn-ghost{border-color:var(--line); color:var(--text); background:transparent;}
+  .btn-ghost:hover{border-color:var(--blue); color:var(--blue);}
+
+  /* ---------- Hero chat mock ---------- */
+  .chatcard{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .chatcard-head{
+    display:flex; align-items:center; gap:10px;
+    padding-bottom:14px; margin-bottom:16px;
+    border-bottom:1px solid var(--line);
+  }
+  .dots{display:flex; gap:6px;}
+  .dots span{width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .chatcard-head .name{font-family:var(--mono); font-size:13px; color:var(--muted); margin-left:6px;}
+  .bubble{
+    max-width:82%;
+    padding:11px 15px;
+    border-radius:14px;
+    font-size:14.5px;
+    margin-bottom:12px;
+    opacity:0;
+    animation:rise 0.5s ease forwards;
+  }
+  .bubble.bot{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-bottom-left-radius:4px;
+  }
+  .bubble.user{
+    background:var(--blue);
+    color:#0B0F17;
+    margin-left:auto;
+    border-bottom-right-radius:4px;
+    font-weight:500;
+  }
+  @keyframes rise{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .typing-dots{display:inline-flex; gap:4px; padding:6px 4px;}
+  .typing-dots span{
+    width:6px; height:6px; border-radius:50%; background:var(--muted);
+    animation:blink 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2){animation-delay:0.2s;}
+  .typing-dots span:nth-child(3){animation-delay:0.4s;}
+  @keyframes blink{ 0%,80%,100%{opacity:0.3;} 40%{opacity:1;} }
+
+  /* ---------- Concept cards ---------- */
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  @media (max-width:760px){ .grid2, .grid3{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px;
+  }
+  .card h3{font-size:19px; margin-bottom:10px;}
+  .card p{color:var(--muted); font-size:15px;}
+  .card .tag{
+    font-family:var(--mono); font-size:12px; color:var(--amber);
+    text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; display:block;
+  }
+
+  /* ---------- Pipeline (real sequence -> numbering justified) ---------- */
+  .pipeline{
+    display:flex; flex-direction:column; border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  }
+  .step{
+    display:grid; grid-template-columns:64px 1fr;
+    padding:26px 28px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+  }
+  .step:last-child{border-bottom:none;}
+  .step .num{
+    font-family:var(--mono); font-size:22px; color:var(--blue); font-weight:500;
+  }
+  .step h4{font-family:var(--disp); font-size:17px; margin-bottom:6px;}
+  .step p{color:var(--muted); font-size:14.5px;}
+
+  /* ---------- Compare table ---------- */
+  .compare{
+    border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    display:grid; grid-template-columns:1fr 1fr;
+  }
+  @media (max-width:700px){ .compare{grid-template-columns:1fr;} }
+  .compare .col{padding:30px; background:var(--surface);}
+  .compare .col:first-child{border-right:1px solid var(--line);}
+  @media (max-width:700px){ .compare .col:first-child{border-right:none; border-bottom:1px solid var(--line);} }
+  .compare h3{font-size:19px; margin-bottom:14px;}
+  .compare ul{list-style:none; color:var(--muted); font-size:14.5px;}
+  .compare li{padding:7px 0; padding-left:18px; position:relative;}
+  .compare li::before{content:"—"; position:absolute; left:0; color:var(--line);}
+
+  /* ---------- Live demo (signature) ---------- */
+  .demo-wrap{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:0;
+    overflow:hidden;
+  }
+  .demo-head{
+    padding:18px 24px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .demo-head .live{
+    font-family:var(--mono); font-size:12px; color:var(--amber);
+    display:flex; align-items:center; gap:7px;
+  }
+  .live-dot{width:7px; height:7px; border-radius:50%; background:var(--amber); animation:blink 1.4s infinite;}
+  #chatlog{
+    height:320px; overflow-y:auto; padding:22px 24px;
+    display:flex; flex-direction:column;
+  }
+  #chatlog .bubble{animation:rise 0.35s ease forwards;}
+  .demo-input-row{
+    display:flex; gap:10px; padding:16px 20px; border-top:1px solid var(--line);
+  }
+  #chatinput{
+    flex:1; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:8px; padding:12px 14px; color:var(--text); font-family:var(--body); font-size:14.5px;
+    outline:none;
+  }
+  #chatinput:focus{border-color:var(--blue);}
+  #chatsend{
+    background:var(--blue); color:#0B0F17; border:none; border-radius:8px;
+    padding:0 20px; font-weight:600; cursor:pointer; font-family:var(--body); font-size:14.5px;
+  }
+  #chatsend:hover{opacity:0.9;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; padding:0 24px 18px;}
+  .chip{
+    font-family:var(--mono); font-size:12.5px; color:var(--muted);
+    border:1px solid var(--line); border-radius:20px; padding:7px 13px;
+    cursor:pointer; background:transparent; transition:all 0.15s;
+  }
+  .chip:hover{border-color:var(--blue); color:var(--blue);}
+
+  /* ---------- Apps grid ---------- */
+  .apps{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+  @media (max-width:760px){ .apps{grid-template-columns:repeat(2,1fr);} }
+  .app{
+    border:1px solid var(--line); border-radius:12px; padding:22px 18px;
+    text-align:center; background:var(--surface);
+  }
+  .app .icon{font-size:26px; margin-bottom:10px; display:block;}
+  .app .label{font-size:13.5px; color:var(--muted);}
+
+  /* ---------- About ---------- */
+  .about-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:40px; display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:center;
+  }
+  @media (max-width:600px){ .about-card{grid-template-columns:1fr; text-align:center;} }
+  .avatar{
+    width:76px; height:76px; border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--amber));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--disp); font-weight:700; font-size:26px; color:#0B0F17;
+    justify-self:start;
+  }
+  @media (max-width:600px){ .avatar{justify-self:center;} }
+  .about-card h3{font-size:20px; margin-bottom:6px;}
+  .about-card p{color:var(--muted); font-size:15px;}
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:36px 0;
+    text-align:center;
+    color:var(--muted);
+    font-size:13.5px;
+    font-family:var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo"><span class="logo-dot"></span> NeuroTalk</div>
+    <div class="navlinks">
+      <a href="#what">What is it</a>
+      <a href="#pipeline">How it works</a>
+      <a href="#types">Types</a>
+      <a href="#demo">Try it</a>
+      <a href="#apps">Uses</a>
+      <a href="#about">About</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero wrap">
+  <div>
+    <div class="eyebrow">A student project on conversational AI</div>
+    <h1>Teaching machines <span class="accent">to hold a conversation.</span></h1>
+    <p>An AI chatbot is software that understands what you type, figures out what you mean, and replies like a person would — instantly, and at scale. This page walks through how one actually works.</p>
+    <div class="btnrow">
+      <a href="#demo" class="btn btn-primary">Try the live demo</a>
+      <a href="#pipeline" class="btn btn-ghost">See how it thinks</a>
+    </div>
+  </div>
+
+  <div class="chatcard">
+    <div class="chatcard-head">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="name">neurotalk — session</div>
+    </div>
+    <div id="heroChat"></div>
+  </div>
+</section>
+
+<section id="what" class="wrap">
+  <div class="eyebrow">The basics</div>
+  <h2>What exactly is a chatbot?</h2>
+  <p class="lead">Strip away the buzzwords and a chatbot is just a program with one job: take a message in, and send a sensible reply back. How it decides that reply is where things get interesting.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <span class="tag">Definition</span>
+      <h3>A conversational interface</h3>
+      <p>Instead of clicking menus or filling forms, you type — or speak — in plain language, and the system responds the same way. It sits in front of a website, an app, or a phone line.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Why it matters</span>
+      <h3>Always-on support</h3>
+      <p>A chatbot doesn't sleep, doesn't get tired of the same question, and can talk to thousands of people at once — which is why they've become the front line for customer support, learning, and booking.</p>
+    </div>
+  </div>
+</section>
+
+<section id="pipeline" class="wrap">
+  <div class="eyebrow">Under the hood</div>
+  <h2>The path from your message to its reply</h2>
+  <p class="lead">Every message a chatbot receives moves through the same four stages, in this order, before an answer is sent back.</p>
+
+  <div class="pipeline">
+    <div class="step">
+      <div class="num">01</div>
+      <div><h4>Input capture</h4><p>Your typed or spoken message is collected and cleaned — punctuation, typos, and filler words are handled first.</p></div>
+    </div>
+    <div class="step">
+      <div class="num">02</div>
+      <div><h4>Understanding (NLP)</h4><p>Natural Language Processing breaks the sentence into meaning: what's the intent, and what details (dates, names, items) matter?</p></div>
+    </div>
+    <div class="step">
+      <div class="num">03</div>
+      <div><h4>Deciding a response</h4><p>A rule engine or a trained model picks the best reply — either from a fixed set of answers, or generated fresh, word by word.</p></div>
+    </div>
+    <div class="step">
+      <div class="num">04</div>
+      <div><h4>Reply delivery</h4><p>The response is formatted and sent back in under a second, and the conversation's context is saved for the next message.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="types" class="wrap">
+  <div class="eyebrow">Not all chatbots are equal</div>
+  <h2>Rule-based vs. AI-based</h2>
+  <p class="lead">The word "chatbot" covers two very different kinds of systems — one follows a script, the other learns patterns from data.</p>
+
+  <div class="compare">
+    <div class="col">
+      <h3>🧩 Rule-based</h3>
+      <ul>
+        <li>Follows fixed if-this-then-that logic</li>
+        <li>Only understands phrases it's programmed for</li>
+        <li>Cheap to build, easy to predict</li>
+        <li>Breaks on anything unexpected</li>
+        <li>Good fit: FAQs, order status, simple menus</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>🧠 AI-based</h3>
+      <ul>
+        <li>Trained on large volumes of real conversation</li>
+        <li>Understands intent, not just keywords</li>
+        <li>Improves as it sees more data</li>
+        <li>Needs more computing power to run</li>
+        <li>Good fit: tutoring, open Q&A, assistants</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="demo" class="wrap">
+  <div class="eyebrow">Signature demo</div>
+  <h2>A tiny chatbot, actually running in this page</h2>
+  <p class="lead">This is a small rule-based bot — the simplest kind from the comparison above. Type a message, or tap a suggestion, and watch it decide a reply in real time.</p>
+
+  <div class="demo-wrap">
+    <div class="demo-head">
+      <div class="name" style="font-family:var(--mono); font-size:13px; color:var(--muted);">rule-based-bot.js</div>
+      <div class="live"><span class="live-dot"></span> live in your browser</div>
+    </div>
+    <div id="chatlog"></div>
+    <div class="chips">
+      <button class="chip" data-msg="what is a chatbot?">what is a chatbot?</button>
+      <button class="chip" data-msg="how do you work?">how do you work?</button>
+      <button class="chip" data-msg="tell me about ritika">tell me about ritika</button>
+      <button class="chip" data-msg="bye">bye</button>
+    </div>
+    <div class="demo-input-row">
+      <input id="chatinput" type="text" placeholder="Type a message and press Enter…" autocomplete="off">
+      <button id="chatsend">Send</button>
+    </div>
+  </div>
+</section>
+
+<section id="apps" class="wrap">
+  <div class="eyebrow">Where you'll meet one</div>
+  <h2>Chatbots in everyday life</h2>
+  <p class="lead">You've probably talked to more of these this month than you realize.</p>
+
+  <div class="apps">
+    <div class="app"><span class="icon">🛒</span><div class="label">Online shopping support</div></div>
+    <div class="app"><span class="icon">🏦</span><div class="label">Banking &amp; balance checks</div></div>
+    <div class="app"><span class="icon">📚</span><div class="label">Study &amp; homework help</div></div>
+    <div class="app"><span class="icon">🏥</span><div class="label">Symptom check-in</div></div>
+    <div class="app"><span class="icon">✈️</span><div class="label">Flight &amp; ticket booking</div></div>
+    <div class="app"><span class="icon">🍔</span><div class="label">Food ordering</div></div>
+    <div class="app"><span class="icon">💼</span><div class="label">HR &amp; workplace queries</div></div>
+    <div class="app"><span class="icon">🎓</span><div class="label">College admissions info</div></div>
+  </div>
+</section>
+
+<section id="about" class="wrap">
+  <div class="eyebrow">Who made this</div>
+  <div class="about-card">
+    <div class="avatar">R</div>
+    <div>
+      <h3>Built by Ritika</h3>
+      <p>Student at ITI Women, Ropar — built with plain HTML, CSS, and JavaScript as a project on AI chatbots.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  NEUROTALK — A STUDENT PROJECT ON CONVERSATIONAL AI
+</footer>
+
+<script>
+// ---------- Hero animated exchange (auto-plays once) ----------
+const heroScript = [
+  {who:'user', text:'Hi! What can you do?'},
+  {who:'bot', text:'I can answer questions, book things, and learn from every chat 🙂'},
+  {who:'user', text:'Are you like a human?'},
+  {who:'bot', text:'Not quite — I follow patterns in language, not real understanding.'}
+];
+const heroChat = document.getElementById('heroChat');
+let heroIdx = 0;
+function playHero(){
+  if(heroIdx >= heroScript.length){
+    setTimeout(()=>{ heroChat.innerHTML=''; heroIdx=0; playHero(); }, 2200);
+    return;
+  }
+  const msg = heroScript[heroIdx];
+  if(msg.who === 'bot'){
+    const typing = document.createElement('div');
+    typing.className = 'bubble bot';
+    typing.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+    heroChat.appendChild(typing);
+    setTimeout(()=>{
+      typing.textContent = msg.text;
+      heroIdx++;
+      setTimeout(playHero, 900);
+    }, 700);
+  } else {
+    const b = document.createElement('div');
+    b.className = 'bubble user';
+    b.textContent = msg.text;
+    heroChat.appendChild(b);
+    heroIdx++;
+    setTimeout(playHero, 700);
+  }
+}
+playHero();
+
+// ---------- Live rule-based demo ----------
+const chatlog = document.getElementById('chatinput') && document.getElementById('chatlog');
+const chatinput = document.getElementById('chatinput');
+const chatsend = document.getElementById('chatsend');
+
+function addBubble(text, who){
+  const b = document.createElement('div');
+  b.className = 'bubble ' + who;
+  b.textContent = text;
+  chatlog.appendChild(b);
+  chatlog.scrollTop = chatlog.scrollHeight;
+  return b;
+}
+
+function botReply(input){
+  const t = input.toLowerCase();
+  if(/hello|hi|hey/.test(t)) return "Hey there! Ask me about chatbots, or type 'help'.";
+  if(/what is a chatbot/.test(t)) return "A chatbot is a program that reads your message and replies using rules or a trained model.";
+  if(/how do you work/.test(t)) return "I check your message for keywords, match them to a rule, and send back the linked reply — that's rule-based logic.";
+  if(/ritika/.test(t)) return "Ritika is an ITI Women, Ropar student who built this page using HTML, CSS, and JavaScript.";
+  if(/help/.test(t)) return "Try: 'what is a chatbot', 'how do you work', or 'tell me about ritika'.";
+  if(/bye|thanks|thank you/.test(t)) return "You're welcome — good luck with your project! 👋";
+  return "I only know a few fixed replies — a real AI model would understand a lot more than this.";
+}
+
+function handleSend(){
+  const val = chatinput.value.trim();
+  if(!val) return;
+  addBubble(val, 'user');
+  chatinput.value = '';
+  const typing = addBubble('', 'bot');
+  typing.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+  chatlog.scrollTop = chatlog.scrollHeight;
+  setTimeout(()=>{
+    typing.textContent = botReply(val);
+    chatlog.scrollTop = chatlog.scrollHeight;
+  }, 550);
+}
+
+chatsend.addEventListener('click', handleSend);
+chatinput.addEventListener('keydown', e => { if(e.key === 'Enter') handleSend(); });
+document.querySelectorAll('.chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    chatinput.value = chip.dataset.msg;
+    handleSend();
+  });
+});
+
+// opening bot message
+addBubble("Hi! I'm a small rule-based chatbot. Try tapping a suggestion below 👇", 'bot');
+</script>
+
+</body>
+</html>
